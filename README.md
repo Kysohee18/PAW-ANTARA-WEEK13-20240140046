@@ -1,5 +1,18 @@
 # Telegram Shop Bot — CPMK52: Bot Messaging, Long Polling, Reuse Logic (DRY)
 
+## Fitur tambahan (Tugas 13)
+- **Login 2 role**: customer & admin (session-based, `bcryptjs` buat hash password).
+- **CRUD produk** khusus admin di `/admin/products`.
+- **Order multi-item**: 1 kali checkout bisa pesan beberapa produk sekaligus (form web maupun chat AI), tersimpan di tabel `orders` (header) + `order_items` (rincian per produk).
+- **Invoice detail & ubah status** (admin) di `/invoices/:id`.
+
+### Akun default (dari `npm run seed`)
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@toko.com | admin123 |
+| Customer | customer@toko.com | customer123 |
+
+
 User belanja lewat **halaman web**, bisa manual (form biasa) ATAU **chat sama AI**
 yang bisa bandingin produk, kasih rekomendasi, dan **langsung bikinin order**
 kalau user udah yakin mau beli. Bot Telegram khusus dipake **admin** — notifikasi
