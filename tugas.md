@@ -71,7 +71,9 @@ Pas dibuka di invoice, kedua produk yang dipesan kesimpen semua dalam 1 invoice,
 
 Admin bisa buka detail invoice pesanan mana aja terus ubah statusnya.
 
-![detail invoice](tugas-md-assets/09-invoice-detail.png)
+
+<img width="1919" height="1014" alt="image" src="https://github.com/user-attachments/assets/e57569a6-4dea-46d8-8b1e-f9594f1ba3b6" />
+
 
 Ini tampilan detail invoice-nya, ada rincian tiap produk yang dipesan sama totalnya.
 
