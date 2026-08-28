@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const session = require("express-session");
 const { sequelize } = require("./models");
 const startBot = require("./bot/bot");
 
@@ -7,6 +8,8 @@ const productRoutes = require("./routes/product.routes");
 const orderRoutes = require("./routes/order.routes");
 const chatRoutes = require("./routes/chat.routes");
 const pageRoutes = require("./routes/page.routes");
+const authRoutes = require("./routes/auth.routes");
+const adminRoutes = require("./routes/admin.routes");
 
 const app = express();
 
@@ -16,6 +19,23 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // buat baca body dari form HTML
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "rahasia-toko-kita",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+// 🛡️ DRY: sekali set di sini, semua view otomatis bisa akses `user`
+// (buat cek role login) tanpa perlu di-passing manual tiap res.render()
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  next();
+});
+
+app.use("/", authRoutes);
+app.use("/admin", adminRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/chat", chatRoutes);
@@ -28,7 +48,7 @@ async function start() {
     await sequelize.authenticate();
     console.log("Koneksi database berhasil");
 
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
     console.log("Sync model selesai");
 
     // Express (halaman web tempat user belanja) dan bot Telegram (khusus
