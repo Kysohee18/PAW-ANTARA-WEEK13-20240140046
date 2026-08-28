@@ -9,7 +9,7 @@ async function chat(req, res) {
       return sendResponse(res, { code: 400, success: false, message: 'message wajib diisi' });
     }
 
-    const result = await chatWithAI(message, Array.isArray(history) ? history : []);
+    const result = await chatWithAI(message, Array.isArray(history) ? history : [], req.session.user.id);
 
     return sendResponse(res, {
       message: 'Berhasil dapat balasan',

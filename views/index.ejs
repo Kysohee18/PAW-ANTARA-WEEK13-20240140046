@@ -20,14 +20,42 @@
       <% } %>
 
       <h2 class="font-semibold text-gray-700 mb-3">Produk Kami</h2>
-      <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <% products.forEach(function(product) { %>
-          <%- include('partials/product-card', { product }) %>
-        <% }) %>
-      </div>
+
+      <% if (user) { %>
+        <form method="POST" action="/order">
+          <input
+            type="text"
+            name="buyerName"
+            placeholder="Nama kamu (atas nama pemesan)"
+            required
+            value="<%= user.name %>"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4"
+          />
+          <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <% products.forEach(function(product) { %>
+              <%- include('partials/product-card', { product }) %>
+            <% }) %>
+          </div>
+          <button
+            type="submit"
+            class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg"
+          >Pesan produk yang dicentang</button>
+        </form>
+      <% } else { %>
+        <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <% products.forEach(function(product) { %>
+            <%- include('partials/product-card', { product }) %>
+          <% }) %>
+        </div>
+        <p class="text-sm text-blue-600 mt-4">
+          <a href="/login" class="underline font-medium">Masuk</a> atau
+          <a href="/register" class="underline font-medium">daftar</a> dulu buat bisa pesan produk.
+        </p>
+      <% } %>
+
       <p class="text-xs text-gray-400 mt-3">
-        Bisa pesan langsung lewat form di atas, ATAU chat sama asisten AI di samping →
-        bandingin produk, minta rekomendasi, terus bilang aja mau beli.
+        Bisa centang beberapa produk sekaligus di form di atas, ATAU chat sama asisten AI
+        di samping → bandingin produk, minta rekomendasi, terus bilang aja mau beli.
       </p>
     </section>
 
@@ -35,31 +63,39 @@
     <section class="bg-white border border-gray-200 rounded-xl flex flex-col h-[600px] sticky top-6">
       <div class="border-b border-gray-200 px-4 py-3">
         <h2 class="font-semibold text-gray-700">💬 Tanya / Pesan lewat Chat</h2>
-        <p class="text-xs text-gray-400">Coba: "bagusan produk A apa B?" atau "aku beli produk A 3 biji atas nama Budi"</p>
+        <p class="text-xs text-gray-400">Coba: "bagusan produk A apa B?" atau "aku beli produk A 3 biji dan produk B 2 biji atas nama Budi"</p>
       </div>
 
-      <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+      <% if (user) { %>
+        <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
 
-      <form id="chat-form" class="border-t border-gray-200 p-3 flex gap-2">
-        <input
-          id="chat-input"
-          type="text"
-          placeholder="Tanya atau pesan produk..."
-          class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-          autocomplete="off"
-        />
-        <button
-          id="chat-submit"
-          type="submit"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
-        >Kirim</button>
-      </form>
+        <form id="chat-form" class="border-t border-gray-200 p-3 flex gap-2">
+          <input
+            id="chat-input"
+            type="text"
+            placeholder="Tanya atau pesan produk..."
+            class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            autocomplete="off"
+          />
+          <button
+            id="chat-submit"
+            type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+          >Kirim</button>
+        </form>
+      <% } else { %>
+        <div class="flex-1 flex items-center justify-center text-sm text-gray-400 px-4 text-center">
+          <a href="/login" class="text-blue-600 underline font-medium">Masuk</a>&nbsp;dulu buat chat sama AI.
+        </div>
+      <% } %>
     </section>
 
   </main>
 
-  <script src="/js/store.js"></script>
-  <script src="/js/utils/formatChatText.js"></script>
-  <script src="/js/chat.js"></script>
+  <% if (user) { %>
+    <script src="/js/store.js"></script>
+    <script src="/js/utils/formatChatText.js"></script>
+    <script src="/js/chat.js"></script>
+  <% } %>
 </body>
 </html>

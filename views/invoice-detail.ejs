@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INV-<%= String(order.id).padStart(5, '0') %> - <%= storeName %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <%- include('partials/nav', { storeName, active: 'invoice' }) %>
+
+  <main class="max-w-2xl mx-auto px-4 pb-10">
+    <a href="/invoices" class="text-sm text-blue-600 mb-4 inline-block">← Balik ke daftar invoice</a>
+
+    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-bold text-gray-800 text-lg">INV-<%= String(order.id).padStart(5, '0') %></h2>
+        <%- include('partials/badge', { label: order.status, color: statusColor(order.status) }) %>
+      </div>
+
+      <p class="text-sm text-gray-500 mb-1"><strong>Atas nama:</strong> <%= order.buyerName %></p>
+      <p class="text-sm text-gray-500 mb-4">
+        <strong>Tanggal:</strong>
+        <%= new Date(order.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) %>
+      </p>
+
+      <table class="w-full text-sm text-left mb-4">
+        <thead class="text-gray-600 border-b border-gray-200">
+          <tr>
+            <th class="py-2">Produk</th>
+            <th class="py-2 text-center">Jumlah</th>
+            <th class="py-2 text-right">Harga Satuan</th>
+            <th class="py-2 text-right">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% order.items.forEach(function(item) { %>
+            <tr class="border-b border-gray-100">
+              <td class="py-2"><%= item.Product ? item.Product.name : '(produk dihapus)' %></td>
+              <td class="py-2 text-center"><%= item.quantity %></td>
+              <td class="py-2 text-right">Rp<%= item.priceAtOrder.toLocaleString('id-ID') %></td>
+              <td class="py-2 text-right">Rp<%= (item.priceAtOrder * item.quantity).toLocaleString('id-ID') %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+
+      <p class="text-right font-bold text-gray-800 mb-4">Total: Rp<%= order.totalAmount.toLocaleString('id-ID') %></p>
+
+      <% if (user.role === 'admin') { %>
+        <form method="POST" action="/invoices/<%= order.id %>/status" class="flex gap-2 items-center border-t border-gray-200 pt-4">
+          <label class="text-sm text-gray-600">Ubah status:</label>
+          <select name="status" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+            <% statuses.forEach(function(s) { %>
+              <option value="<%= s %>" <%= s === order.status ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+          </select>
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-1.5 rounded-lg">
+            Simpan
+          </button>
+        </form>
+      <% } %>
+    </div>
+  </main>
+</body>
+</html>

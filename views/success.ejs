@@ -13,10 +13,13 @@
     <p class="text-sm text-gray-500 mb-4">Admin <%= storeName %> udah dapet notifikasi order kamu</p>
 
     <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-left text-sm text-gray-600 mb-4">
-      <p><strong>Order ID:</strong> #<%= order.id %></p>
-      <p><strong>Produk:</strong> <%= product.name %></p>
-      <p><strong>Jumlah:</strong> <%= order.quantity %></p>
-      <p><strong>Total:</strong> Rp<%= (product.price * order.quantity).toLocaleString('id-ID') %></p>
+      <p class="mb-2"><strong>Order ID:</strong> #<%= order.id %></p>
+      <ul class="mb-2 space-y-1">
+        <% items.forEach(function(item) { %>
+          <li><%= item.product.name %> x<%= item.quantity %> — Rp<%= (item.product.price * item.quantity).toLocaleString('id-ID') %></li>
+        <% }) %>
+      </ul>
+      <p><strong>Total:</strong> Rp<%= order.totalAmount.toLocaleString('id-ID') %></p>
       <p><strong>Atas nama:</strong> <%= order.buyerName %></p>
     </div>
 

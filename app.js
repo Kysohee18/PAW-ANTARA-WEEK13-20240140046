@@ -27,10 +27,12 @@ app.use(
   })
 );
 
-// 🛡️ DRY: sekali set di sini, semua view otomatis bisa akses `user`
-// (buat cek role login) tanpa perlu di-passing manual tiap res.render()
+// 🛡️ DRY: sekali set di sini, semua view otomatis bisa akses `user` &
+// `statusColor` tanpa perlu di-passing manual tiap res.render()
+const { statusColor } = require('./utils/statusColor');
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  res.locals.statusColor = statusColor;
   next();
 });
 

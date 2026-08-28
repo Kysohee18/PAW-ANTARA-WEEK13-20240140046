@@ -19,25 +19,35 @@ const orderService = require("./order.service");
 const buatPesananFunctionDeclaration = {
   name: "buat_pesanan",
   description:
-    'Membuat pesanan pembelian produk untuk pelanggan. PANGGIL FUNGSI INI HANYA setelah pelanggan secara eksplisit setuju untuk membeli (misal bilang "ya sudah saya beli", "oke pesan itu", "gas beli 5 biji"), dan kamu sudah tau nama produk, jumlah, DAN nama pembelinya. Kalau nama pembeli belum disebut, TANYA DULU sebelum manggil fungsi ini, jangan mengarang nama.',
+    'Membuat pesanan pembelian, BISA lebih dari 1 produk sekaligus dalam 1 pesanan. PANGGIL FUNGSI INI HANYA setelah pelanggan secara eksplisit setuju untuk membeli (misal bilang "ya sudah saya beli", "oke pesan itu", "gas beli 5 biji", "aku ambil A sama B"), dan kamu sudah tau semua produk+jumlahnya DAN nama pembelinya. Kalau nama pembeli belum disebut, TANYA DULU sebelum manggil fungsi ini, jangan mengarang nama.',
   parameters: {
     type: "OBJECT",
     properties: {
-      namaProduk: {
-        type: "STRING",
-        description:
-          "Nama produk yang dibeli, harus persis sama dengan salah satu nama produk di katalog",
-      },
-      jumlah: {
-        type: "NUMBER",
-        description: "Jumlah unit yang dibeli",
+      items: {
+        type: "ARRAY",
+        description: "Daftar produk yang dibeli, boleh berisi 1 atau lebih produk berbeda",
+        items: {
+          type: "OBJECT",
+          properties: {
+            namaProduk: {
+              type: "STRING",
+              description:
+                "Nama produk yang dibeli, harus persis sama dengan salah satu nama produk di katalog",
+            },
+            jumlah: {
+              type: "NUMBER",
+              description: "Jumlah unit produk ini yang dibeli",
+            },
+          },
+          required: ["namaProduk", "jumlah"],
+        },
       },
       namaPembeli: {
         type: "STRING",
         description: "Nama pembeli, dari yang disebutkan user di percakapan",
       },
     },
-    required: ["namaProduk", "jumlah", "namaPembeli"],
+    required: ["items", "namaPembeli"],
   },
 };
 
@@ -56,8 +66,9 @@ TUGAS KAMU:
    jelasin kelebihan masing-masing, tanya preferensi pelanggan (misal warna,
    budget, kebutuhan) buat bantu mereka milih.
 2. Kalau pelanggan udah EKSPLISIT bilang mau beli (contoh: "ya udah aku beli
-   produk B 5 biji", "oke gas pesan itu"), dan kamu udah tau produk, jumlah,
-   DAN nama pembelinya, panggil fungsi buat_pesanan.
+   produk B 5 biji", "oke gas pesan itu", "aku ambil A 2 biji sama B 3 biji"),
+   dan kamu udah tau semua produk+jumlahnya (boleh lebih dari 1 produk sekaligus)
+   DAN nama pembelinya, panggil fungsi buat_pesanan dengan seluruh item sekaligus.
 3. Kalau nama pembeli belum disebut, TANYA DULU "atas nama siapa nih
    pesanannya?" sebelum manggil fungsi. Jangan pernah mengarang nama.
 4. Kalau produk yang diminta stoknya kurang dari jumlah yang diminta,
@@ -80,23 +91,27 @@ ATURAN KETAT (WAJIB DIPATUHI):
  * order lewat form manual. Jalur AI cuma nambahin CARA MASUK baru, logic
  * bisnisnya tetep satu tempat.
  */
-async function executeBuatPesanan({ namaProduk, jumlah, namaPembeli }) {
-  const product = await Product.findOne({
-    where: { name: { [Op.iLike]: `%${namaProduk}%` } },
-  });
+async function executeBuatPesanan({ items, namaPembeli }, userId) {
+  const resolvedItems = [];
 
-  if (!product) {
-    return {
-      success: false,
-      message: `Produk "${namaProduk}" gak ketemu di katalog`,
-    };
+  for (const { namaProduk, jumlah } of items || []) {
+    const product = await Product.findOne({
+      where: { name: { [Op.iLike]: `%${namaProduk}%` } },
+    });
+
+    if (!product) {
+      return { success: false, message: `Produk "${namaProduk}" gak ketemu di katalog` };
+    }
+
+    resolvedItems.push({ productId: product.id, quantity: Math.round(jumlah) });
   }
 
-  // 🛡️ DRY: fungsi yang SAMA PERSIS dipake form manual di halaman web
+  // 🛡️ DRY: fungsi yang SAMA PERSIS dipake form manual di halaman web,
+  // sekarang menerima banyak produk sekaligus dalam 1 pesanan
   const result = await orderService.createOrder({
-    productId: product.id,
-    quantity: Math.round(jumlah),
+    userId,
     buyerName: namaPembeli,
+    items: resolvedItems,
   });
 
   return result;
@@ -107,7 +122,7 @@ async function executeBuatPesanan({ namaProduk, jumlah, namaPembeli }) {
  * nyimpen sesi apapun (stateless) - client yang tanggung jawab nyimpen &
  * ngirim ulang riwayat percakapan tiap request. Formatnya: [{ role, text }]
  */
-async function chatWithAI(message, historyRaw = []) {
+async function chatWithAI(message, historyRaw = [], userId = null) {
   if (!genAI) {
     return {
       reply:
@@ -141,7 +156,7 @@ async function chatWithAI(message, historyRaw = []) {
 
   // Gemini minta buat_pesanan dipanggil
   const call = functionCalls[0];
-  const executionResult = await executeBuatPesanan(call.args);
+  const executionResult = await executeBuatPesanan(call.args, userId);
 
   // kirim balik HASIL eksekusi ke Gemini, biar dia nyusun jawaban natural
   // buat user (bukan kita yang hardcode kalimatnya)

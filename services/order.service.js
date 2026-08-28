@@ -1,61 +1,67 @@
-const { Order, Product } = require('../models');
+const { sequelize, Order, OrderItem, Product } = require('../models');
 const { formatRupiah } = require('../utils/formatRupiah');
 const bot = require('../config/telegram');
 
 /**
  * 🛡️ DRY - SERVICE LAYER
  * ============================================================
- * createOrder() dipanggil dari controllers/order.controller.js (web).
- * notifyAdminNewOrder() dipanggil DARI DALAM createOrder() otomatis,
- * jadi logic "kurangin stok -> simpen order -> kirim notif admin"
- * cukup ditulis SEKALI di sini, gak nyebar ke banyak tempat.
- *
- * Bagian DRY paling kentara di project ini justru ada di
- * services/product.service.js: fungsi getAllProducts() dan
- * formatProductListText() dipake bareng-bareng di 3 tempat beda:
- * 1. Halaman web katalog (views/index.ejs, lewat page.controller.js)
- * 2. REST API GET /api/products
- * 3. Perintah /stok di bot Telegram (bot/handlers/stok.handler.js)
+ * createOrder() dipanggil dari controllers/page.controller.js (form web)
+ * DAN services/gemini.service.js (AI function calling). Order sekarang
+ * bisa berisi BANYAK produk sekaligus (multi-item) dalam 1 transaksi,
+ * logic cek stok, kurangin stok, simpen order+item, DAN notifikasi
+ * admin cuma ditulis SEKALI di sini.
  * ============================================================
  */
-async function createOrder({ productId, quantity, buyerName }) {
-  const product = await Product.findByPk(productId);
-
-  if (!product) {
-    return { success: false, message: `Produk dengan ID ${productId} gak ditemukan` };
+async function createOrder({ userId, buyerName, items }) {
+  if (!items || items.length === 0) {
+    return { success: false, message: 'Order harus punya minimal 1 produk' };
   }
 
-  if (product.stock < quantity) {
-    return {
-      success: false,
-      message: `Stok gak cukup. Stok tersedia: ${product.stock}, kamu minta: ${quantity}`,
-    };
-  }
+  return sequelize.transaction(async (t) => {
+    const resolvedItems = [];
 
-  const order = await Order.create({
-    productId: product.id,
-    quantity,
-    buyerName,
+    // validasi semua item dulu - kalau ada 1 aja stok gak cukup, seluruh order dibatalkan
+    for (const { productId, quantity } of items) {
+      const product = await Product.findByPk(productId, { transaction: t, lock: t.LOCK.UPDATE });
+
+      if (!product) {
+        return { success: false, message: `Produk dengan ID ${productId} gak ditemukan` };
+      }
+      if (product.stock < quantity) {
+        return {
+          success: false,
+          message: `Stok "${product.name}" gak cukup. Tersedia: ${product.stock}, diminta: ${quantity}`,
+        };
+      }
+      resolvedItems.push({ product, quantity });
+    }
+
+    const totalAmount = resolvedItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+
+    const order = await Order.create({ userId, buyerName, totalAmount }, { transaction: t });
+
+    for (const { product, quantity } of resolvedItems) {
+      await OrderItem.create(
+        { orderId: order.id, productId: product.id, quantity, priceAtOrder: product.price },
+        { transaction: t }
+      );
+      product.stock -= quantity;
+      await product.save({ transaction: t });
+    }
+
+    // 🛡️ DRY lagi: notifyAdminNewOrder dipanggil di sini, otomatis
+    // ke-trigger baik order-nya datang dari web maupun dari Telegram/AI
+    await notifyAdminNewOrder(order, resolvedItems);
+
+    return { success: true, order, items: resolvedItems };
   });
-
-  // kurangin stok - juga logic bisnis yang sama buat kedua pintu masuk
-  product.stock -= quantity;
-  await product.save();
-
-  // 🛡️ DRY lagi: notifyAdminNewOrder dipanggil di sini, otomatis
-  // ke-trigger baik order-nya datang dari web maupun dari Telegram
-  await notifyAdminNewOrder(order, product);
-
-  return { success: true, order, product };
 }
 
 /**
  * Kirim notifikasi ke admin lewat Telegram tiap ada order baru,
- * APAPUN sumbernya (web atau Telegram). Ini juga contoh reuse:
- * fungsi kirim pesan Telegram yang sama dipake buat notifikasi admin,
- * bukan cuma buat balesan ke pembeli.
+ * merangkum SEMUA item dalam 1 order (bisa lebih dari 1 produk).
  */
-async function notifyAdminNewOrder(order, product) {
+async function notifyAdminNewOrder(order, resolvedItems) {
   const adminChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
 
   if (!bot || !adminChatId || adminChatId === 'isi-chat-id-admin') {
@@ -63,22 +69,19 @@ async function notifyAdminNewOrder(order, product) {
     return;
   }
 
-  const total = formatRupiah(product.price * order.quantity);
-
-  // product.stock di titik ini SUDAH dikurangi (liat createOrder di atas,
-  // notifyAdminNewOrder dipanggil SETELAH product.save())
-  const stockWarning = product.stock <= 5 ? ' ⚠️ MENIPIS' : '';
+  const itemLines = resolvedItems.map(({ product, quantity }) => {
+    const stockWarning = product.stock <= 5 ? ' ⚠️ MENIPIS' : '';
+    return `- ${product.name} x${quantity} (sisa stok: ${product.stock}${stockWarning})`;
+  });
 
   const text = [
     '🔔 Order baru masuk!',
     '',
-    `Produk: ${product.name}`,
-    `Jumlah dipesan: ${order.quantity}`,
-    `Total: ${total}`,
+    ...itemLines,
+    '',
+    `Total: ${formatRupiah(order.totalAmount)}`,
     `Pembeli: ${order.buyerName}`,
     `Order ID: #${order.id}`,
-    '',
-    `📦 Sisa stok sekarang: ${product.stock}${stockWarning}`,
   ].join('\n');
 
   try {
@@ -88,8 +91,25 @@ async function notifyAdminNewOrder(order, product) {
   }
 }
 
-async function getAllOrders() {
-  return Order.findAll({ include: Product, order: [['createdAt', 'DESC']] });
+async function getAllOrders(userId) {
+  const where = userId ? { userId } : {};
+  return Order.findAll({
+    where,
+    include: [{ model: OrderItem, as: 'items', include: Product }],
+    order: [['createdAt', 'DESC']],
+  });
 }
 
-module.exports = { createOrder, notifyAdminNewOrder, getAllOrders };
+async function getOrderById(id) {
+  return Order.findByPk(id, {
+    include: [{ model: OrderItem, as: 'items', include: Product }],
+  });
+}
+
+async function updateOrderStatus(id, status) {
+  const order = await Order.findByPk(id);
+  if (!order) return null;
+  return order.update({ status });
+}
+
+module.exports = { createOrder, notifyAdminNewOrder, getAllOrders, getOrderById, updateOrderStatus };
