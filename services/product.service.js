@@ -44,4 +44,28 @@ function formatProductListText(products) {
   return lines.join('\n\n');
 }
 
-module.exports = { getAllProducts, getProductById, formatProductListText };
+async function createProduct({ name, description, price, stock }) {
+  return Product.create({ name, description, price, stock });
+}
+
+async function updateProduct(id, { name, description, price, stock }) {
+  const product = await Product.findByPk(id);
+  if (!product) return null;
+  return product.update({ name, description, price, stock });
+}
+
+async function deleteProduct(id) {
+  const product = await Product.findByPk(id);
+  if (!product) return false;
+  await product.destroy();
+  return true;
+}
+
+module.exports = {
+  getAllProducts,
+  getProductById,
+  formatProductListText,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+};

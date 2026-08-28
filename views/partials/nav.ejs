@@ -4,15 +4,38 @@
       <h1 class="text-xl font-bold text-gray-800"><%= storeName %></h1>
       <p class="text-sm text-gray-500">Belanja & tanya-tanya lewat chat AI</p>
     </div>
-    <nav class="flex gap-2">
-      <a
-        href="/"
-        class="px-3 py-1.5 text-sm rounded-lg font-medium <%= active === 'katalog' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600' %>"
-      >Katalog & Chat</a>
-      <a
-        href="/invoices"
-        class="px-3 py-1.5 text-sm rounded-lg font-medium <%= active === 'invoice' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600' %>"
-      >Invoice</a>
+    <nav class="flex items-center gap-2">
+      <% if (user && user.role === 'admin') { %>
+        <a
+          href="/admin/products"
+          class="px-3 py-1.5 text-sm rounded-lg font-medium <%= active === 'admin-products' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600' %>"
+        >Kelola Produk</a>
+        <a
+          href="/invoices"
+          class="px-3 py-1.5 text-sm rounded-lg font-medium <%= active === 'invoice' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600' %>"
+        >Invoice</a>
+      <% } else { %>
+        <a
+          href="/"
+          class="px-3 py-1.5 text-sm rounded-lg font-medium <%= active === 'katalog' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600' %>"
+        >Katalog & Chat</a>
+        <% if (user) { %>
+          <a
+            href="/invoices"
+            class="px-3 py-1.5 text-sm rounded-lg font-medium <%= active === 'invoice' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600' %>"
+          >Invoice</a>
+        <% } %>
+      <% } %>
+
+      <span class="w-px h-5 bg-gray-200 mx-1"></span>
+
+      <% if (user) { %>
+        <span class="text-sm text-gray-500 px-2">Hai, <%= user.name %></span>
+        <a href="/logout" class="px-3 py-1.5 text-sm rounded-lg font-medium bg-gray-100 text-gray-600">Keluar</a>
+      <% } else { %>
+        <a href="/login" class="px-3 py-1.5 text-sm rounded-lg font-medium bg-gray-100 text-gray-600">Masuk</a>
+        <a href="/register" class="px-3 py-1.5 text-sm rounded-lg font-medium bg-blue-600 text-white">Daftar</a>
+      <% } %>
     </nav>
   </div>
 </header>
