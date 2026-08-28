@@ -8,7 +8,8 @@ Di bawah ini bukti pengerjaan tugas sesuai ketentuan yang dikasih. Tiap bagian s
 
 Produk yang dipakai udah lumayan banyak, ada 20 produk beda-beda (kaos, kemeja, celana, sepatu, aksesoris, dll), bukan cuma 1-2 data doang.
 
-![data produk](tugas-md-assets/01-data-produk.png)
+<img width="1919" height="1029" alt="image" src="https://github.com/user-attachments/assets/cadaf439-dbdd-4cfb-acb0-dfb373633735" />
+
 
 Ini keliatan di halaman katalog kalau produknya udah banyak, gak cuma sample dikit.
 
@@ -17,20 +18,22 @@ Ini keliatan di halaman katalog kalau produknya udah banyak, gak cuma sample dik
 Admin bisa nambah, ubah, dan hapus produk lewat halaman `/admin/products`.
 
 ### Create
-![sebelum tambah produk](tugas-md-assets/02-crud-create-before.png)
-![sesudah tambah produk](tugas-md-assets/02-crud-create-after.png)
+<img width="1919" height="1027" alt="image" src="https://github.com/user-attachments/assets/3800629e-e21e-4a24-8d4e-917172e7c97d" />
+
+<img width="1918" height="1036" alt="image" src="https://github.com/user-attachments/assets/a3642431-d9c3-4021-9961-5dbd885e1566" />
+
 
 Sebelum nambah produk baru sama sesudahnya, keliatan produk baru muncul di list.
 
 ### Update
-![sebelum edit produk](tugas-md-assets/03-crud-update-before.png)
-![sesudah edit produk](tugas-md-assets/03-crud-update-after.png)
+
+<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/becf21dc-3600-424a-8d33-48dde9fc3376" />
 
 Ganti harga/stok salah satu produk, terus keliatan datanya berubah.
 
 ### Delete
-![sebelum hapus produk](tugas-md-assets/04-crud-delete-before.png)
-![sesudah hapus produk](tugas-md-assets/04-crud-delete-after.png)
+<img width="1919" height="1039" alt="image" src="https://github.com/user-attachments/assets/f2a937ad-6504-48bb-88cb-7df939ac0898" />
+
 
 Produk yang dihapus udah gak muncul lagi di list.
 
@@ -39,12 +42,14 @@ Produk yang dihapus udah gak muncul lagi di list.
 Ada 2 akun beda role, login-nya beda tampilan sama redirect-nya.
 
 ### Login sebagai Customer
-![login customer](tugas-md-assets/05-login-customer.png)
+<img width="1919" height="927" alt="image" src="https://github.com/user-attachments/assets/7da34be2-0de6-49d7-af14-8dfc810492d2" />
+
 
 Masuk pakai akun customer, diarahkan ke halaman katalog, menu yang keliatan cuma Katalog & Invoice.
 
 ### Login sebagai Admin
-![login admin](tugas-md-assets/06-login-admin.png)
+<img width="1919" height="937" alt="image" src="https://github.com/user-attachments/assets/98bcb69f-74b0-4bdf-8431-9ba8d245e335" />
+
 
 Masuk pakai akun admin, diarahkan langsung ke halaman Kelola Produk, ada menu tambahan buat CRUD.
 
@@ -52,11 +57,13 @@ Masuk pakai akun admin, diarahkan langsung ke halaman Kelola Produk, ada menu ta
 
 Nyoba pesan 2 produk beda sekaligus dalam 1 kali checkout (bukan 1 per 1), buat mastiin semua kesimpen bukan cuma yang pertama.
 
-![pesan 2 produk sekaligus](tugas-md-assets/07-order-multiple.png)
+<img width="1919" height="1031" alt="image" src="https://github.com/user-attachments/assets/96290ec3-b264-48f9-bfed-1d6fabcdd6a7" />
+
 
 Centang 2 produk beda di katalog terus submit satu kali.
 
-![bukti di invoice semua produk tersimpan](tugas-md-assets/08-invoice-multiple-item.png)
+<img width="1919" height="1031" alt="image" src="https://github.com/user-attachments/assets/79e293a2-6132-4b88-993d-489bc486fdca" />
+
 
 Pas dibuka di invoice, kedua produk yang dipesan kesimpen semua dalam 1 invoice, gak ada yang ilang.
 
@@ -69,10 +76,11 @@ Admin bisa buka detail invoice pesanan mana aja terus ubah statusnya.
 Ini tampilan detail invoice-nya, ada rincian tiap produk yang dipesan sama totalnya.
 
 ### Sebelum ubah status
-![status sebelum diubah](tugas-md-assets/10-status-before.png)
+<img width="1919" height="1024" alt="image" src="https://github.com/user-attachments/assets/bda3840e-21ff-48a2-9e46-16031fde4145" />
+
 
 ### Sesudah ubah status
-![status sesudah diubah](tugas-md-assets/11-status-after.png)
+<img width="1919" height="1017" alt="image" src="https://github.com/user-attachments/assets/1b7af1fa-dfba-48ae-b698-00f8709bd6d1" />
 
 Status pesanan diganti dari admin, misalnya dari "pending" ke "diproses".
 
@@ -84,7 +92,8 @@ Tampilan lama masih polos banget, gak ada login, form order-nya 1 produk doang.
 
 Tampilan sekarang udah ada navbar dengan menu beda per role, form order bisa centang banyak produk, badge status warna-warni biar gampang dibedain, sama halaman login/register.
 
-![tampilan sesudah](tugas-md-assets/13-ui-after.png)
+<img width="1918" height="1040" alt="image" src="https://github.com/user-attachments/assets/dd1b1e8c-09a1-4fc3-87d0-3f296c3e7527" />
+
 
 ---
 
